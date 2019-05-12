@@ -27,6 +27,9 @@
     <Text Include="commandlog.txt">
       <Filter>Source Files</Filter>
     </Text>
+    <Text Include="temp.txt">
+      <Filter>Source Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -52,6 +55,9 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="home.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="UpdateInfomation.html">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

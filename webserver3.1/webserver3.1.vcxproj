@@ -147,6 +147,7 @@
     <Text Include="data.txt" />
     <Text Include="log.txt" />
     <Text Include="ReadMe.txt" />
+    <Text Include="temp.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -165,6 +166,7 @@
     <None Include="home.html" />
     <None Include="Login.html" />
     <None Include="sign-up.html" />
+    <None Include="UpdateInfomation.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -26,20 +26,21 @@ void saveCommandUser(char username[], char *ip, char command[]);
 bool signUp(const char *buffer);
 bool signUpCheck(char[], char[]);
 void createNewAccount(char username[], char password[], char name[]);
+bool updateInformation(const char *buffer,char realUser[]);
+bool checkOldPassword(const char *pOldPassword);
+void changeValue(const char *pUsername, const char* type, const char *pValue);
+void changeFileName(const char *from, const char *to);
 SOCKET clients[64];
 char *ids[64];
 int numClients;
-char tokenList[64][11];
+char tokenList[64][10];
 
 const std::string currentDateTime() {
 	time_t     now = time(0);
 	struct tm  tstruct;
 	char       buf[80];
 	tstruct = *localtime(&now);
-	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
-	// for more information about date/time format
 	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
-
 	return buf;
 }
 
@@ -85,7 +86,6 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	struct ClientThreadInfo clientStruct = *(ClientThreadInfo* )lpParam;
 	SOCKET client = clientStruct.client;
 	char *ipAddress = clientStruct.ipAddress;
-	printf("dia chi ip: %s", ipAddress);
 	char buf[1024];
 	char sendBuf[256];
 	int ret;
@@ -189,7 +189,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 			send(client, msg, strlen(msg), 0);
 			closesocket(client);
 		}
-		else if (strncmp(buf, "GET /sign-up", 12) == 0) {
+		else if (strncmp(buf, "GET /sign-up", 12) == 0 && exist) {
 			FILE *f = fopen("sign-up.html", "rb");
 			while (true)
 			{
@@ -202,14 +202,14 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 			closesocket(client);
 			fclose(f);
 		}
-		else if (strncmp(buf, "POST /sign-up", 13) == 0) {
+		else if (strncmp(buf, "POST /sign-up", 13) == 0 && exist) {
 			// lay du lieu o day roi ghi vao file data.txt,nho check user da ton tai hay cgya
 			if (signUp(buf) == true) {
-				const char *msg = "HTTP/1.1 200 OK\r\n Set-Cookie: ah=b\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Dang ki thanh cong ,an vao day dang nhap lai </br> <a href='/'><button>Go</button></a></h1> <a href='/'><button>Back</button></a> </body></html>";
+				const char *msg = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Dang ki thanh cong ,an vao day dang nhap lai </br> <a href='/'><button>Go</button></a></h1> <a href='/'><button>Back</button></a> </body></html>";
 				send(client, msg, strlen(msg), 0);
 			}
 			else {
-				const char *msg = "HTTP/1.1 200 OK\r\n Set-Cookie: ahi=ahi\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Dang ki that bai,tai khoan da ton tai </h1> <a href='/'><button>Back</button></a> </body></html>";
+				const char *msg = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Dang ki that bai,tai khoan da ton tai </h1> <a href='/'><button>Back</button></a> </body></html>";
 				send(client, msg, strlen(msg), 0);
 			}
 			closesocket(client);
@@ -246,6 +246,33 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 			const char *msg = "HTTP/1.1 200 OK\r\n Set-Cookie: Token=aaaa\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Dang xuat thanh cong </h1> <a href='/'><button>Back</button></a> </body></html>";
 			send(client, msg, strlen(msg), 0);
 			removeToken(cookie);
+			closesocket(client);
+		}
+		else if (strncmp(buf, "GET /update", 11) == 0) {
+			const char  *yo = "HTTP/1.1 200 OK\r\n Content-Type: text/html\r\n\r\n";
+			send(client, yo, strlen(yo), 0);
+			FILE *f = fopen("UpdateInfomation.html", "rb");
+			while (true)
+			{
+				ret = fread(buf, 1, sizeof(buf), f);
+				if (ret > 0)
+					send(client, buf, ret, 0);
+				else
+					break;
+			}
+			closesocket(client);
+			fclose(f);
+		}
+		else if (strncmp(buf, "POST /update", 11) == 0) {
+			if (updateInformation(buf, realUser) == true) {
+				const char *msg = "HTTP/1.1 200 OK\r\n Content-Type: text/html\r\n\r\n<html><body><h1>Cap nhat thanh cong </h1> <a href='/'><button>Back</button></a> </body></html>";
+				send(client, msg, strlen(msg), 0);
+			}
+			else
+			{
+				const char *msg = "HTTP/1.1 200 OK\r\n Content-Type: text/html\r\n\r\n<html><body><h1>Loi</h1> <a href='/update'><button>Back</button></a> </body></html>";
+				send(client, msg, strlen(msg), 0);
+			}
 			closesocket(client);
 		}
 	}
@@ -311,7 +338,7 @@ void generateToken(char *token) {
 }
 
 bool checkUserExist(char cookie[]) {
-	for (int i = 0; i < numClients; i++) {
+	for (int i = 0; i <= numClients; i++) {
 		printf("token List: %s", tokenList[i]);
 		if (strcmp(cookie, tokenList[i]) == 0) {
 			return true;
@@ -352,8 +379,6 @@ bool signUp(const char *buffer) {
 	}
 }
 
-
-
 bool signUpCheck(char username[], char password[]) {
 	//Kiem tra xem ten da co trong file text chua
 	fstream data;
@@ -373,8 +398,6 @@ bool signUpCheck(char username[], char password[]) {
 	return TRUE;
 }
 
-
-
 void createNewAccount(char username[], char password[], char name[]) {
 	fstream data;
 	data.open("data.txt", ios::out | ios::app);
@@ -391,4 +414,84 @@ void saveCommandUser(char username[], char *ip, char command[]) {
 		data << username << "&" << ip << "&" << command << "&" << currentDateTime() << "\n";
 	}
 	data.close();
+}
+
+bool updateInformation(const char *buffer, char username[]) {
+	char *body = strstr((char*)buffer, "oldPassword=");
+	char oldPassword[64] = "\0";
+	char newPassword[64] = "\0";
+	char newName[32] = "\0";
+	sscanf(body, "oldPassword=%[^\r] \r\nnewPassword=%[^\r] \r\nnewName=%[^\r] \r\n", oldPassword, newPassword, newName);
+	if (checkOldPassword(oldPassword) == true) {
+		if (strlen(newPassword) > 0) {
+			changeValue(username, "password", newPassword);
+		}
+		if (strlen(newName) > 0) {
+			printf("new name 1 : %s", newName);
+			changeValue(username, "name", newName);
+		}
+	}
+	else return false;
+	return true;
+}
+
+bool checkOldPassword(const char *pOldPassword) {
+	char userDb[64], passDb[64], name[64];
+	fstream data;
+	string line;
+	data.open("data.txt", ios::in);
+	if (data.is_open()) {
+		while (getline(data, line)) {
+			sscanf(line.c_str(), "%s %s %[^\n]", userDb, passDb, name);
+			cout << "usename: " << userDb << " pass: " << passDb << " name: " << name << endl;
+			if (strcmp(pOldPassword, passDb) == 0) {
+				data.close();
+				return true;
+			}
+		}
+	}
+	data.close();
+	return false;
+}
+
+void changeValue(const char *pUsername, const char* type, const char *pValue) {
+	fstream data;
+	fstream newFile;
+	string line;
+	char userDb[64], passDb[64], name[64];
+	data.open("data.txt", ios::in);
+	newFile.open("temp.txt", ios::out);
+	if (data.is_open()) {
+		while (getline(data, line)) {
+			sscanf(line.c_str(), "%s %s %[^\n]", userDb, passDb, name);
+			if (strcmp(pUsername, userDb) == 0) {
+				printf("dung pass roi: %s", pValue);
+				if (strcmp(type, "password") == 0) {
+					// Sua password
+					newFile << userDb << " " << pValue << " " << name << "\n";
+				}
+				else if (strcmp(type, "name") == 0) {
+					printf("name: %s", pValue);
+					//Sua nick name
+					newFile << userDb << " " << passDb << " " << pValue << "\n";
+				}
+			}
+			else {
+				newFile << line << "\n";
+			}
+		}
+	}
+	data.close();
+	newFile.close();
+	changeFileName("temp.txt", "data.txt");
+	//xoa het thong tin di
+	newFile.open("temp.txt", ios::out);
+	newFile.close();
+}
+void changeFileName(const char *from, const char *to) {
+	int res = 0;
+	res = rename(from, "ttemp");
+	res = rename(to, "dtemp");
+	res = rename("ttemp", "data.txt");
+	res = rename("dtemp", "temp.txt");
 }
