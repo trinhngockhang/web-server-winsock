@@ -21,6 +21,8 @@ char *connection_info(struct sockaddr_in &client);
 void generateToken(char *token);
 //delete token
 void removeToken(char cookie[]);
+//save command of user
+void saveCommandUser(char username[], char *ip, char command[]);
 bool signUp(const char *buffer);
 bool signUpCheck(char[], char[]);
 void createNewAccount(char username[], char password[], char name[]);
@@ -28,10 +30,28 @@ SOCKET clients[64];
 char *ids[64];
 int numClients;
 char tokenList[64][11];
+
+const std::string currentDateTime() {
+	time_t     now = time(0);
+	struct tm  tstruct;
+	char       buf[80];
+	tstruct = *localtime(&now);
+	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+	// for more information about date/time format
+	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+	return buf;
+}
+
+struct ClientThreadInfo
+{
+	char *ipAddress;
+	SOCKET client;
+};
+
 int main()
 {
 	numClients = 0;
-	
 	WSADATA wsa;
 	WSAStartup(MAKEWORD(2, 2), &wsa);
 	SOCKET listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -40,19 +60,21 @@ int main()
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	addr.sin_port = htons(9000);
-
 	bind(listener, (SOCKADDR *)&addr, sizeof(addr));
 	listen(listener, 5);
 
 	while (true)
 	{
+		struct ClientThreadInfo clientThread;
 		struct sockaddr_in client_info = { 0 };
 		int size = sizeof(client_info);
 		SOCKET client = accept(listener, (sockaddr*)&client_info, &size);
 		printf("Accepted client: %d\n", client);
 		char *ipClient = connection_info(client_info);
 		printf("Client IP: %s \n", ipClient);
-		CreateThread(0, 0, ClientThread, &client, 0, 0);
+		clientThread.client = client;
+		clientThread.ipAddress = ipClient;
+		CreateThread(0, 0, ClientThread, &clientThread, 0, 0);
 	}
 
 	return 0;
@@ -60,8 +82,10 @@ int main()
 
 DWORD WINAPI ClientThread(LPVOID lpParam)
 {
-	SOCKET client = *(SOCKET *)lpParam;
-
+	struct ClientThreadInfo clientStruct = *(ClientThreadInfo* )lpParam;
+	SOCKET client = clientStruct.client;
+	char *ipAddress = clientStruct.ipAddress;
+	printf("dia chi ip: %s", ipAddress);
 	char buf[1024];
 	char sendBuf[256];
 	int ret;
@@ -80,9 +104,13 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		if (ret <= 0) break;
 		buf[ret] = 0;
 		printf("Received: %s\n", buf);
-		// get cookie
+		// get cookie,that ra day la lay token trong cookie thoi k phai lay ca cookie,luoi sua
 		char cookie[11] = "";
 		char *restBody = strstr(buf, "Token=");
+		char *userCookie = strstr(buf, "userlogined=");
+		char userIncludeDownLine[64];
+		// day la thang user dang dang nhap realUser
+		char realUser[64];
 		if (restBody) {
 			printf("%s", restBody);
 			strncat(cookie, restBody + 6, 10);
@@ -92,6 +120,11 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		}
 		else {
 			exist = false;
+		}
+		if (userCookie) {
+			sscanf(userCookie, "%*[^=] = %[^\r]", realUser);
+			realUser[sizeof(realUser) - 2] = 0;
+			printf("day la doan can tach: %s", realUser);
 		}
 		
 		if (strncmp(buf, "GET / HTTP", 10) == 0) {
@@ -144,6 +177,9 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 				char token[11];
 				generateToken(token);
 				strcat(msg, token);
+				strcat(msg, "  ");
+				strcat(msg, "userlogined=");
+				strcat(msg, username);
 				strcat(msg, end);
 			}
 			else {
@@ -181,17 +217,16 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		else if (strncmp(buf, "POST /command", 13) == 0) {
 			char fileBuf[256];
 			char *command = strstr(buf, "command=");
+			int size = strlen(command);
+			printf("size: %d", size);
 			char realCommand[256] = "";
-			
-			size_t bigsize = sizeof(command);
-			int size = static_cast<int>(bigsize);
-			size = size * 4;
-			printf("do dai: %d", size);
-			strncat(realCommand, command + 8, size) ;
+			strncat(realCommand, command + 8, size - 10) ;
 			realCommand[size - 8] = 0;
+			saveCommandUser(realUser, realCommand, ipAddress);
 			strcat(realCommand, " > c:\\test_server\\out.txt");
 			printf("command: %s", realCommand);
-			system(realCommand);
+			int result = system(realCommand);
+			if (result == -1) printf("lenh sai roi ngu vl");
 			FILE *f = fopen("C:\\test_server\\out.txt", "r");
 			char msg[20148] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Ket qua:</h1> ";
 			while (fgets(fileBuf, sizeof(fileBuf), f))
@@ -201,7 +236,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 				strcat(msg, "</div>");
 				printf("file: %s", fileBuf);
 			}
-			
+			if (!fileBuf) strcat(msg, "<p> Noi dung cau lenh khong hop le </p>");
 			strcat(msg, "<a href='/'><button>Back</button></a> </body></html>");
 			send(client, msg, strlen(msg), 0);
 			fclose(f);
@@ -266,7 +301,6 @@ bool check_pass(char username[], char password[]) {
 void generateToken(char *token) {
 	int i = 0;
 	while (i < 10) {
-		
 		int number = 65 + rand() % 26;
 		token[i] = number;
 		printf("%d\n", number);
@@ -346,6 +380,15 @@ void createNewAccount(char username[], char password[], char name[]) {
 	data.open("data.txt", ios::out | ios::app);
 	if (data.is_open()) {
 		data << username << " " << password << " " << name << "\n";
+	}
+	data.close();
+}
+
+void saveCommandUser(char username[], char *ip, char command[]) {
+	fstream data;
+	data.open("commandlog.txt", ios::out | ios::app);
+	if (data.is_open()) {
+		data << username << "&" << ip << "&" << command << "&" << currentDateTime() << "\n";
 	}
 	data.close();
 }

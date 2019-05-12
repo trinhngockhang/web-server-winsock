@@ -24,6 +24,9 @@
     <Text Include="log.txt">
       <Filter>Source Files</Filter>
     </Text>
+    <Text Include="commandlog.txt">
+      <Filter>Source Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

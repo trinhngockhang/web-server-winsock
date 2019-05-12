@@ -1,11 +1,2 @@
-﻿  webserver3.1.cpp
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(140): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(68): warning C4101: 'cmd': unreferenced local variable
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(70): warning C4101: 'tmp': unreferenced local variable
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(69): warning C4101: 'id': unreferenced local variable
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(72): warning C4101: 'targetId': unreferenced local variable
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(66): warning C4101: 'sendBuf': unreferenced local variable
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(306): warning C4101: 'msg': unreferenced local variable
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(218): warning C4715: 'ClientThread': not all control paths return a value
-  webserver3.1.vcxproj -> C:\Users\Khangkhang\documents\visual studio 2015\Projects\webserver3.1\Debug\webserver3.1.exe
+﻿  webserver3.1.vcxproj -> C:\Users\Khangkhang\documents\visual studio 2015\Projects\webserver3.1\Debug\webserver3.1.exe
   webserver3.1.vcxproj -> C:\Users\Khangkhang\documents\visual studio 2015\Projects\webserver3.1\Debug\webserver3.1.pdb (Full PDB)

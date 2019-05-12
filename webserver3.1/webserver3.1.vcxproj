@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="commandlog.txt" />
     <Text Include="data.txt" />
     <Text Include="log.txt" />
     <Text Include="ReadMe.txt" />
