@@ -87,7 +87,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 	struct ClientThreadInfo clientStruct = *(ClientThreadInfo* )lpParam;
 	SOCKET client = clientStruct.client;
 	char *ipAddress = clientStruct.ipAddress;
-	char buf[1024];
+	char buf[1024 * 8];
 	char sendBuf[256];
 	int ret;
 	char cmd[64];
@@ -344,7 +344,7 @@ char *connection_info(struct sockaddr_in &client)
 bool check_pass(char username[], char password[]) {
 	FILE *f = fopen("data.txt", "rb");
 	int ret;
-	char buf[1024];
+	char buf[1024 * 8];
 	char userDb[128], passDb[128], end[128];
 	int i = 0;
 	int count = 0;
