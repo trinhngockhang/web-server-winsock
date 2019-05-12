@@ -29,7 +29,7 @@ void createNewAccount(char username[], char password[], char name[]);
 bool updateInformation(const char *buffer,char realUser[]);
 bool checkOldPassword(const char *pOldPassword);
 void changeValue(const char *pUsername, const char* type, const char *pValue);
-void changeFileName(const char *from, const char *to);
+void changeFileName();
 char *getName(char *username);
 SOCKET clients[64];
 char *ids[64];
@@ -243,7 +243,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 			closesocket(client);
 			fclose(f);
 		}
-		else if (strncmp(buf, "POST /sign-up", 13) == 0 && exist) {
+		else if (strncmp(buf, "POST /sign-up", 13) == 0 ) {
 			// lay du lieu o day roi ghi vao file data.txt,nho check user da ton tai hay cgya
 			if (signUp(buf) == true) {
 				const char *msg = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Dang ki thanh cong ,an vao day dang nhap lai </br> <a href='/'><button>Go</button></a></h1> <a href='/'><button>Back</button></a> </body></html>";
@@ -325,6 +325,12 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 			}
 			closesocket(client);
 		}
+		else {
+			printf("da vao dy");
+			char *msg = "HTTP/1.1 200 OK\r\n Content-Type: text/html\r\n\r\n<html><body><h1>Request Invalid</h1> <a href='/'><button>Back</button></a> </body></html>";
+			send(client, msg, strlen(msg), 0);
+			closesocket(client);
+		}
 	}
 	closesocket(client);
 }
@@ -363,6 +369,7 @@ bool check_pass(char username[], char password[]) {
 
 					if (strcmp(username, userDb) == 0 && strcmp(password, passDb) == 0) {
 						printf("dung mat khau");
+						fclose(f);
 						return true;
 					}
 				}
@@ -439,6 +446,7 @@ bool signUpCheck(char username[], char password[]) {
 			if (strcmp(username, usernameData.c_str()) == 0) {
 				//dang ky that bai
 				printf("Tai khoan da ton tai trong he thong!\n");
+				data.close();
 				return FALSE;
 			}
 		}
@@ -515,7 +523,10 @@ char *getName(char *username) {
 		while (getline(data, line)) {
 			sscanf(line.c_str(), "%s %s %[^\n]", userDb, passDb, name);
 			printf("user DB getname: %s", userDb);
-			if (strcmp(username, userDb) == 0) return name;
+			if (strcmp(username, userDb) == 0) {
+				data.close();
+				return name;
+			}
 		}
 	}
 	data.close();
@@ -551,15 +562,13 @@ void changeValue(const char *pUsername, const char* type, const char *pValue) {
 	}
 	data.close();
 	newFile.close();
-	changeFileName("temp.txt", "data.txt");
+	changeFileName();
 	//xoa het thong tin di
 	newFile.open("temp.txt", ios::out);
 	newFile.close();
 }
-void changeFileName(const char *from, const char *to) {
+void changeFileName() {
 	int res = 0;
-	res = rename(from, "ttemp");
-	res = rename(to, "dtemp");
-	res = rename("ttemp", "data.txt");
-	res = rename("dtemp", "temp.txt");
+	res = remove("data.txt");
+	res = rename("temp.txt", "data.txt");
 }

@@ -6,8 +6,8 @@ c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver
 c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(97): warning C4101: 'targetId': unreferenced local variable
 c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(91): warning C4101: 'sendBuf': unreferenced local variable
 c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(112): warning C4101: 'userIncludeDownLine': unreferenced local variable
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(416): warning C4101: 'msg': unreferenced local variable
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(330): warning C4715: 'ClientThread': not all control paths return a value
-c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(518): warning C4172: returning address of local variable or temporary: name
+c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(423): warning C4101: 'msg': unreferenced local variable
+c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(336): warning C4715: 'ClientThread': not all control paths return a value
+c:\users\khangkhang\documents\visual studio 2015\projects\webserver3.1\webserver3.1\webserver3.1.cpp(528): warning C4172: returning address of local variable or temporary: name
   webserver3.1.vcxproj -> C:\Users\Khangkhang\documents\visual studio 2015\Projects\webserver3.1\Debug\webserver3.1.exe
   webserver3.1.vcxproj -> C:\Users\Khangkhang\documents\visual studio 2015\Projects\webserver3.1\Debug\webserver3.1.pdb (Full PDB)
