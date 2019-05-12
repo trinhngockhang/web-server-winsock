@@ -27,7 +27,10 @@
     <Text Include="commandlog.txt">
       <Filter>Source Files</Filter>
     </Text>
-    <Text Include="temp.txt">
+    <Text Include="headerHome.txt">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="endHome.txt">
       <Filter>Source Files</Filter>
     </Text>
   </ItemGroup>
@@ -58,6 +61,18 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="UpdateInfomation.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="test.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="loginSuccess.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="loginFail.html">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="logoutSuccess.html">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

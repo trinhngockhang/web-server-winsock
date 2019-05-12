@@ -145,9 +145,10 @@
   <ItemGroup>
     <Text Include="commandlog.txt" />
     <Text Include="data.txt" />
+    <Text Include="endHome.txt" />
+    <Text Include="headerHome.txt" />
     <Text Include="log.txt" />
     <Text Include="ReadMe.txt" />
-    <Text Include="temp.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -165,7 +166,11 @@
   <ItemGroup>
     <None Include="home.html" />
     <None Include="Login.html" />
+    <None Include="loginFail.html" />
+    <None Include="loginSuccess.html" />
+    <None Include="logoutSuccess.html" />
     <None Include="sign-up.html" />
+    <None Include="test.html" />
     <None Include="UpdateInfomation.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

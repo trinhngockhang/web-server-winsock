@@ -30,6 +30,7 @@ bool updateInformation(const char *buffer,char realUser[]);
 bool checkOldPassword(const char *pOldPassword);
 void changeValue(const char *pUsername, const char* type, const char *pValue);
 void changeFileName(const char *from, const char *to);
+char *getName(char *username);
 SOCKET clients[64];
 char *ids[64];
 int numClients;
@@ -110,7 +111,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		char *userCookie = strstr(buf, "userlogined=");
 		char userIncludeDownLine[64];
 		// day la thang user dang dang nhap realUser
-		char realUser[64];
+		char realUser[32];
 		if (restBody) {
 			printf("%s", restBody);
 			strncat(cookie, restBody + 6, 10);
@@ -123,11 +124,13 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 		}
 		if (userCookie) {
 			sscanf(userCookie, "%*[^=] = %[^\r]", realUser);
-			realUser[sizeof(realUser) - 2] = 0;
+			//realUser[sizeof(realUser) - 2] = 0;
 			printf("day la doan can tach: %s", realUser);
 		}
 		
 		if (strncmp(buf, "GET / HTTP", 10) == 0) {
+			const char  *yo = "HTTP/1.1 200 OK\r\n Content-Type: text/html\r\n\r\n";
+			send(client, yo, strlen(yo), 0);
 			printf("da nhan request\n");
 			//chua dang nhap
 			if (!exist) {
@@ -143,7 +146,8 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 				fclose(f);
 			}
 			else {
-				FILE *f = fopen("home.html", "rb");
+				//send phan dau cua trang home
+				FILE *f = fopen("headerHome.txt", "rb");
 				while (true)
 				{
 					ret = fread(buf, 1, sizeof(buf), f);
@@ -153,6 +157,21 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 						break;
 				}
 				fclose(f);
+				// ghep ten user
+				printf("user name la: %s", realUser);
+				char *name = realUser;
+				char *nameUserinDb = getName(name);
+				send(client, nameUserinDb, strlen(nameUserinDb) + 1, 0);
+				FILE *fEnd = fopen("endHome.txt", "rb");
+				while (true)
+				{
+					ret = fread(buf, 1, sizeof(buf), fEnd);
+					if (ret > 0)
+						send(client, buf, ret, 0);
+					else
+						break;
+				}
+				fclose(fEnd);
 			}
 			closesocket(client);
 		}
@@ -172,7 +191,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 			if (a) {
 				srand(time(NULL));
 				char *header = "HTTP/1.1 200 OK\r\n Set-Cookie: Token=";
-				char *end = "\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Ban da dang nhap thanh cong</h1></br><p>An vao day de tro ve trang chu</p><a href='/'><button>Go</button></a></body></html>";
+				char *end = "\r\nContent-Type: text/html\r\n\r\n";
 				strcat(msg, header);
 				char token[11];
 				generateToken(token);
@@ -181,15 +200,37 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 				strcat(msg, "userlogined=");
 				strcat(msg, username);
 				strcat(msg, end);
+				send(client, msg, strlen(msg), 0);
+				FILE *f = fopen("loginSuccess.html", "rb");
+				while (true)
+				{
+					ret = fread(buf, 1, sizeof(buf), f);
+					if (ret > 0)
+						send(client, buf, ret, 0);
+					else
+						break;
+				}
+				fclose(f);
 			}
 			else {
-				strcat(msg,"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Dang nhap khong thanh cong</h1></br><p>An vao day de dang nhap lai</p><a href='/'><button>Go</button></a></body></html>");
+				const char  *yo = "HTTP/1.1 200 OK\r\n Content-Type: text/html\r\n\r\n";
+				send(client, yo, strlen(yo), 0);
+				FILE *f = fopen("loginFail.html", "rb");
+				while (true)
+				{
+					ret = fread(buf, 1, sizeof(buf), f);
+					if (ret > 0)
+						send(client, buf, ret, 0);
+					else
+						break;
+				}
+				fclose(f);
 			}
-
-			send(client, msg, strlen(msg), 0);
 			closesocket(client);
 		}
-		else if (strncmp(buf, "GET /sign-up", 12) == 0 && exist) {
+		else if (strncmp(buf, "GET /sign-up", 12) == 0) {
+			const char  *yo = "HTTP/1.1 200 OK\r\n Content-Type: text/html\r\n\r\n";
+			send(client, yo, strlen(yo), 0);
 			FILE *f = fopen("sign-up.html", "rb");
 			while (true)
 			{
@@ -225,8 +266,7 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 			saveCommandUser(realUser, realCommand, ipAddress);
 			strcat(realCommand, " > c:\\test_server\\out.txt");
 			printf("command: %s", realCommand);
-			int result = system(realCommand);
-			if (result == -1) printf("lenh sai roi ngu vl");
+			system(realCommand);
 			FILE *f = fopen("C:\\test_server\\out.txt", "r");
 			char msg[20148] = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Ket qua:</h1> ";
 			while (fgets(fileBuf, sizeof(fileBuf), f))
@@ -243,12 +283,22 @@ DWORD WINAPI ClientThread(LPVOID lpParam)
 			closesocket(client);
 		}
 		else if (strncmp(buf, "GET /log-out", 12) == 0) {
-			const char *msg = "HTTP/1.1 200 OK\r\n Set-Cookie: Token=aaaa\r\nContent-Type: text/html\r\n\r\n<html><body><h1>Dang xuat thanh cong </h1> <a href='/'><button>Back</button></a> </body></html>";
+			const char *msg = "HTTP/1.1 200 OK\r\n Set-Cookie: Token=aaaa\r\nContent-Type: text/html\r\n\r\n";
 			send(client, msg, strlen(msg), 0);
+			FILE *f = fopen("logoutSuccess.html", "rb");
+			while (true)
+			{
+				ret = fread(buf, 1, sizeof(buf), f);
+				if (ret > 0)
+					send(client, buf, ret, 0);
+				else
+					break;
+			}
+			fclose(f);
 			removeToken(cookie);
 			closesocket(client);
 		}
-		else if (strncmp(buf, "GET /update", 11) == 0) {
+		else if (strncmp(buf, "GET /update", 11) == 0 && exist) {
 			const char  *yo = "HTTP/1.1 200 OK\r\n Content-Type: text/html\r\n\r\n";
 			send(client, yo, strlen(yo), 0);
 			FILE *f = fopen("UpdateInfomation.html", "rb");
@@ -358,7 +408,6 @@ void removeToken(char cookie[]) {
 }
 
 
-
 bool signUp(const char *buffer) {
 	char *body = strstr((char*)buffer, "username=");
 	char username[64];
@@ -421,14 +470,16 @@ bool updateInformation(const char *buffer, char username[]) {
 	char oldPassword[64] = "\0";
 	char newPassword[64] = "\0";
 	char newName[32] = "\0";
+	char *usernamePointer = username;
+	printf("realname duoc truyen vao o updateinfor la: %s \n", username);
 	sscanf(body, "oldPassword=%[^\r] \r\nnewPassword=%[^\r] \r\nnewName=%[^\r] \r\n", oldPassword, newPassword, newName);
 	if (checkOldPassword(oldPassword) == true) {
 		if (strlen(newPassword) > 0) {
-			changeValue(username, "password", newPassword);
+			changeValue(usernamePointer, "password", newPassword);
 		}
 		if (strlen(newName) > 0) {
 			printf("new name 1 : %s", newName);
-			changeValue(username, "name", newName);
+			changeValue(usernamePointer, "name", newName);
 		}
 	}
 	else return false;
@@ -452,6 +503,23 @@ bool checkOldPassword(const char *pOldPassword) {
 	}
 	data.close();
 	return false;
+}
+
+char *getName(char *username) {
+	fstream data;
+	string line;
+	data.open("data.txt", ios::in);
+	printf("user name truyen getname: %s", username);
+	char userDb[64], passDb[64], name[64];
+	if (data.is_open()) {
+		while (getline(data, line)) {
+			sscanf(line.c_str(), "%s %s %[^\n]", userDb, passDb, name);
+			printf("user DB getname: %s", userDb);
+			if (strcmp(username, userDb) == 0) return name;
+		}
+	}
+	data.close();
+	return "user";
 }
 
 void changeValue(const char *pUsername, const char* type, const char *pValue) {
